@@ -1,0 +1,45 @@
+import requests
+from bs4 import BeautifulSoup
+
+URL = 'https://www.lamoda.ru/c/355/clothes-zhenskaya-odezhda/'
+HEADERS = {'User-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36', 'accept': '*/*'}
+HOST = 'https://lamoda.ru'
+FILE = 'clothes.csv'
+
+def get_html(url, params=None):
+    r = requests.get(url, headers=HEADERS, params=params)
+    return r
+
+
+def get_content(html):
+    soup = BeautifulSoup(html, 'html.parser')
+    items = soup.find_all('a', class_='products-list-item__link')
+    
+    
+    clothes = []
+    for item in items:
+        clothes.append({
+            'title': item.find('div', class_='products-list-item__brand').get_text(strip=' ')
+            'link': item.find('a', class_='products-list-item__brand').get('href')
+        })
+    print(clothes)  
+     
+
+def save_file(items, path):
+    with open(path, 'w', newline='') as file:
+        writer = csv.writer(file, delimiter=';')
+        writer.writerow(['Наименование', 'Ссылка'])
+        for item in items:
+            writer.writerow([item['title'], item['link']])        
+        
+def parse():
+    html = get_html(URL)
+    if html.status_code == 200:
+        get_content(html.text)     
+        
+        save_file(clothes, FILE)
+    else:
+        print('Error')
+
+
+parse()
